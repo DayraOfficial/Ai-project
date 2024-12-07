@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dayra Chatbot</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chatBox" class="chat-box"></div>
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Tulis pesan lu di sini...">
+            <button id="sendBtn">Kirim</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.chat-container {
+    width: 400px;
+    height: 600px;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-box {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ddd;
+}
+
+.message {
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.user-message {
+    text-align: right;
+    color: blue;
+}
+
+.bot-message {
+    text-align: left;
+    color: green;
+}
+
+.input-container {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    margin-left: 10px;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+</style>
+<script>
+  document.getElementById('sendBtn').addEventListener('click', async function () {
+    const userInput = document.getElementById('userInput').value.trim();
+    if (userInput) {
+        addMessage(userInput, 'user');
+        document.getElementById('userInput').value = ''; // Clear input
+
+        // Kirim ke Wit.ai API untuk dapatkan jawaban
+        const aiResponse = await getAIResponse(userInput);
+
+        setTimeout(() => {
+            addMessage(aiResponse, 'bot');
+        }, 1000);
+    }
+});
+
+document.getElementById('userInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        document.getElementById('sendBtn').click();
+    }
+});
+
+async function getAIResponse(userMessage) {
+    const API_KEY = 'K7VGDIVE4G4ORSJSQ4ZJMZLJKLPJA64K'; // API Key dari Wit.ai
+    const endpoint = `https://api.wit.ai/message?v=20241207&q=${encodeURIComponent(userMessage)}`; // Endpoint API Wit.ai
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+            },
+        });
+
+        const data = await response.json();
+        return data.text || 'Gua nggak ngerti, coba lagi bro!';
+    } catch (error) {
+        console.error('Error connecting to API:', error);
+        return 'Ada masalah sama server, coba lagi nanti!';
+    }
+}
+
+function addMessage(message, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message');
+    messageDiv.classList.add(sender + '-message');
+    messageDiv.innerHTML = `<span class="${sender}">${sender === 'user' ? 'You: ' : 'AI: '}</span>${message}`;
+    document.getElementById('chatBox').appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function scrollToBottom() {
+    const chatBox = document.getElementById('chatBox');
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function getAIResponse(userMessage) {
+    const API_KEY = 'K7VGDIVE4G4ORSJSQ4ZJMZLJKLPJA64K';
+    const endpoint = `https://api.wit.ai/message?v=20241207&q=${encodeURIComponent(userMessage)}`;
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+            },
+        });
+
+        const data = await response.json();
+
+        // Custom logic buat respon
+        if (data.intents && data.intents.length > 0) {
+            const intent = data.intents[0].name; // Ambil intent utama
+            if (intent === 'greeting') {
+                return 'Halo! Ada yang bisa gua bantu?';
+            } else if (intent === 'question') {
+                return 'Gua bakal cari tahu dulu buat lu.';
+            } else {
+                return `Gua ngerti maksud lu "${intent}", tapi belum ada jawaban fix nih.`;
+            }
+        }
+
+        // Kalau gak ada intent
+        return 'Gua nggak ngerti maksud lu, coba jelasin lagi.';
+    } catch (error) {
+        console.error('Error connecting to API:', error);
+        return 'Ada masalah sama server, coba lagi nanti!';
+    }
+}
+
+</script>
